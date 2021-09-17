@@ -65,12 +65,14 @@ module Polycon
       end
 
       class List < Dry::CLI::Command
-        desc 'List appointments for a professional'
+        desc 'List appointments for a professional, optionally filtered by a date'
 
-        argument :professional, required: true, desc: 'Full date for the appointment'
+        argument :professional, required: true, desc: 'Full name of the professional'
+        option :date, required: false, desc: 'Date to filter appointments by (should be the day)'
 
         example [
-          '"Alma Estevez" # Lists appointments for Alma Estevez'
+          '"Alma Estevez" # Lists all appointments for Alma Estevez',
+          '"Alma Estevez" --date="2021-09-16" # Lists appointments for Alma Estevez on the specified date'
         ]
 
         def call(professional:)
