@@ -4,6 +4,7 @@ GEM
     dry-cli (0.7.0)
 
 PLATFORMS
+  ruby
   x86_64-darwin-20
 
 DEPENDENCIES
