@@ -19,17 +19,16 @@ module Polycon
         ]
 
         def call(name:, **)
-          #warn "TODO: Implementar creación de un o una profesional con nombre '#{name}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
           begin
             FileUtils.mkdir ".polycon/#{get_professional_format(name)}" #unless Dir.entries('.polycon/'+directory_name)
           rescue Errno::EEXIST => exception 
             warn 'ERROR: Ya existe un profesional con ese nombre'
           end
-
         end
       end
 
       class Delete < Dry::CLI::Command
+        include Professionals
         desc 'Delete a professional (only if they have no appointments)'
 
         argument :name, required: true, desc: 'Name of the professional'
@@ -40,7 +39,20 @@ module Polycon
         ]
 
         def call(name: nil)
-          warn "TODO: Implementar borrado de la o el profesional con nombre '#{name}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
+          begin
+            directorios = Dir.entries("./.polycon/#{get_professional_format(name)}")
+            # Borro el . y ..
+            directorios.delete(".")
+            directorios.delete("..")
+            begin
+              Dir.delete("./.polycon/#{get_professional_format(name)}")
+              warn "Profesional Borrado"
+            rescue SystemCallError => exception
+              warn "ERROR: No se ha podido borrar el Profesional, tiene turnos asignados"
+            end
+          rescue => exception
+            warn "ERROR: No se ha encontrado un Profesional con ese nombre: #{get_professional_format(name)}"
+          end
         end
       end
 
@@ -52,7 +64,6 @@ module Polycon
         ]
 
         def call(*)
-          ##warn "TODO: Implementar listado de profesionales.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
           begin
             directorios = Dir.entries("./.polycon")
             # Borro el . y ..
@@ -64,7 +75,7 @@ module Polycon
              warn "#{d[0]+' '+d[1]}"
             end
           rescue => exception
-            warn exception
+            warn "ERROR: Ha surgido un error desconocido: #{exception}"
           end
         end
       end
@@ -81,7 +92,6 @@ module Polycon
         ]
 
         def call(old_name:, new_name:, **)
-          #warn "TODO: Implementar renombrado de profesionales con nombre '#{old_name}' para que pase a llamarse '#{new_name}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
           old_name = get_professional_format(old_name)
           new_name = get_professional_format(new_name)
           begin
