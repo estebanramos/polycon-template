@@ -9,6 +9,9 @@ Bundler.require :default
 # Agrega el directorio `lib' del proyecto al load path de Ruby
 $LOAD_PATH.unshift(File.absolute_path("#{__dir__}/../lib"))
 
+# Creo el directorio principal si no existe
+FileUtils.mkdir ".polycon" unless Dir.exists?('.polycon')
+
 # Requiere `lib/polycon.rb` como punto de partida para cargar todas las definiciones necesarias
 require 'polycon'
 
