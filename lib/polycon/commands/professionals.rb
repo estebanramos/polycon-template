@@ -21,6 +21,7 @@ module Polycon
         def call(name:, **)
           begin
             FileUtils.mkdir ".polycon/#{get_professional_format(name)}" #unless Dir.entries('.polycon/'+directory_name)
+            warn "Profesional Creado: #{name}"
           rescue Errno::EEXIST => exception 
             warn 'ERROR: Ya existe un profesional con ese nombre'
           end
@@ -72,7 +73,7 @@ module Polycon
             warn "[#] Profesionales [#]"
             directorios.each do |d|
               d = d.split("-")
-             warn "#{d[0]+' '+d[1]}"
+             warn "  #{d[0]+' '+d[1]}  "
             end
           rescue => exception
             warn "ERROR: Ha surgido un error desconocido: #{exception}"
@@ -95,7 +96,8 @@ module Polycon
           old_name = get_professional_format(old_name)
           new_name = get_professional_format(new_name)
           begin
-          FileUtils.mv ".polycon/#{old_name}", ".polycon/#{new_name}"
+            FileUtils.mv ".polycon/#{old_name}", ".polycon/#{new_name}"
+            warn "Profesional Renombrado"
           rescue => exception
             warn "ERROR: Ha surgido un problema renombrando al Profesional"
           end
