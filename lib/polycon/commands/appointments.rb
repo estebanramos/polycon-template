@@ -3,10 +3,26 @@ module Polycon
     module Appointments
       require 'time'
       def get_professional_format(name)
-        professional_name = name.split(" ")
-        directory_name = professional_name[0]+'-'+professional_name[1]
-        return directory_name
+        begin
+          professional_name = name.split(" ")
+          directory_name = professional_name[0]+'-'+professional_name[1]
+          return directory_name
+        rescue => exception
+          warn "ERRROR: Ha ocurrido un error parseando el nombre del profesional"
+          warn exception
+        end
       end
+
+      def get_filename_date(date)
+        begin
+          date = Time.parse(date)
+          return date.strftime("%Y-%m-%d_%k-%M")
+        rescue => exception
+          warn "ERROR: Mal formato de fecha"
+          exit
+        end
+      end
+
       class Create < Dry::CLI::Command
         include Appointments
 
@@ -24,15 +40,10 @@ module Polycon
         ]
 
         def call(date:, professional:, name:, surname:, phone:, notes: nil)
-          begin
-            date = Time.parse(date)
-            filename = date.strftime("%Y-%m-%d_%k-%M")
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-            exit
-          end
+          filename = get_filename_date(date)
+          directory_name = get_professional_format(professional)
 
+          #TODO estandarizar path 
           if File.exists?("./.polycon/#{directory_name}/#{filename}")
             warn "ERROR: El Profesional ya tiene un turno asignado para ese horario"
           else
@@ -63,15 +74,9 @@ module Polycon
 
         def call(date:, professional:)
           warn "TODO: Implementar detalles de un turno con fecha '#{date}' y profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          begin
-            date = Time.parse(date)
-            filename = date.strftime("%Y-%m-%d_%k-%M")
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-            warn exception
-            exit
-          end
+          filename = get_filename_date(date)
+          directory_name = get_professional_format(professional)
+
           if File.exists?("./.polycon/#{directory_name}/#{filename}")
             file = File.open("./.polycon/#{directory_name}/#{filename}")
             warn file.read
@@ -96,21 +101,14 @@ module Polycon
 
         def call(date:, professional:)
           warn "TODO: Implementar borrado de un turno con fecha '#{date}' y profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          begin
-            date = Time.parse(date)
-            filename = date.strftime("%Y-%m-%d_%k-%M")
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-            warn exception
-            exit
-          end
+          filename = get_filename_date(date)
+          directory_name = get_professional_format(professional)
           if File.exists?("./.polycon/#{directory_name}/#{filename}")
             begin
               File.delete("./.polycon/#{directory_name}/#{filename}")
               warn "Appointment borrado"
             rescue => exception
-              warn "ERROR: Ya surgido un error borrando el Appointment"
+              warn "ERROR: Ha surgido un error borrando el Appointment"
               warn exception
             end      
           else
@@ -130,22 +128,17 @@ module Polycon
         ]
 
         def call(professional:)
-          warn "TODO: Implementar borrado de todos los turnos de la o el profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          begin
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-          end
+          directory_name = get_professional_format(professional)
           if Dir.exists?("./.polycon/#{directory_name}")
             begin
               FileUtils.rm_rf(Dir["./.polycon/#{directory_name}/*"])
               warn "Appointments borrados"
             rescue => exception
-              warn "ERROR: Ya surgido un error borrando el Appointment"
+              warn "ERROR: Ha surgido un error borrando todos los Appointments"
               warn exception
             end      
           else
-            warn "ERROR: No hay un Appointment para la fecha especificada o el Profesional no existe"
+            warn "ERROR: El Profesional no existe"
           end
         end
       end
@@ -163,13 +156,11 @@ module Polycon
         ]
 
         def call(professional:, date: nil)
-          warn "TODO: Implementar listado de turnos de la o el profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          begin
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
+          if date 
+            date = get_filename_date(date) 
           end
-          warn directory_name
+          
+          directory_name = get_professional_format(professional)
           if Dir.exists?("./.polycon/#{directory_name}")
             directorios = Dir.entries("./.polycon/#{directory_name}")
             # Borro el . y ..
@@ -177,8 +168,7 @@ module Polycon
             directorios.delete("..")
             if date 
               directorios.each do |d|
-                date_filename = d.split("_")[0]
-                if date == date_filename
+                if date.split("_")[0] == d.split("_")[0]
                   file = File.open("./.polycon/#{directory_name}/#{d}")
                   warn file.read
                 end
@@ -191,7 +181,7 @@ module Polycon
               
             end
           else
-            warn "ERROR: No hay un Appointment para la fecha especificada o el Profesional no existe"
+            warn "ERROR: El Profesional no existe"
           end
         end
       end
@@ -210,20 +200,9 @@ module Polycon
 
         def call(old_date:, new_date:, professional:)
           warn "TODO: Implementar cambio de fecha de turno con fecha '#{old_date}' para que pase a ser '#{new_date}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          begin
-            old_date = Time.parse(old_date)
-            old_date_filename = old_date.strftime("%Y-%m-%d_%k-%M")
-            new_date = Time.parse(new_date)
-            new_date_filename = new_date.strftime("%Y-%m-%d_%k-%M")
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-            exit
-          end
-          begin
-            directory_name = get_professional_format(professional)
-          rescue => exception
-            warn "ERROR: Mal formato de fecha"
-          end
+          old_date_filename = get_filename_date(old_date)
+          new_date_filename = get_filename_date(new_date)
+          directory_name = get_professional_format(professional)
           warn directory_name
           warn old_date_filename
           if File.exists?("./.polycon/#{directory_name}/#{old_date_filename}")
