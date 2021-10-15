@@ -7,4 +7,6 @@ module Polycon
   # Por ejemplo:
   # autoload :Appointment, 'polycon/appointment'
   autoload :Professional, 'polycon/models/professionals'
+  autoload :Appointment, 'polycon/models/appointments'
+
 end

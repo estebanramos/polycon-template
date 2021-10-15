@@ -40,24 +40,7 @@ module Polycon
         ]
 
         def call(date:, professional:, name:, surname:, phone:, notes: nil)
-          filename = get_filename_date(date)
-          directory_name = get_professional_format(professional)
-
-          #TODO estandarizar path 
-          if File.exists?("./.polycon/#{directory_name}/#{filename}")
-            warn "ERROR: El Profesional ya tiene un turno asignado para ese horario"
-          else
-            begin
-              file = File.open("./.polycon/#{directory_name}/#{filename}", "w")
-              file.write("#{surname}\n#{name}\n#{phone}\n#{notes}")
-              file.close()
-              warn "Turno asignado correctamente"
-            rescue Errno::ENOENT => exception
-              warn "ERROR: No se encuentra un Profesional con ese nombre"
-            rescue => exception
-              warn "ERROR: Ha surgido un error desconocido"
-            end          
-          end
+          Appointment.create_appointment(date: date, professional: professional, name: name, surname: surname, phone: phone, notes: notes)
         end
       end
 
