@@ -40,7 +40,27 @@ module Polycon
         ]
 
         def call(date:, professional:, name:, surname:, phone:, notes: nil)
-          Appointment.create_appointment(date: date, professional: professional, name: name, surname: surname, phone: phone, notes: notes)
+          appointment = Appointment.new(date: date, professional: professional, name: name, surname: surname, phone: phone, notes: notes)
+          professional = Professional.new(professional)
+
+          filename = appointment.get_filename_date
+          directory_name = professional.get_professional_format
+
+          #TODO estandarizar path 
+          if File.exists?("./.polycon/#{directory_name}/#{filename}")
+            warn "ERROR: El Profesional ya tiene un turno asignado para ese horario"
+          else
+            begin
+              file = File.open("./.polycon/#{directory_name}/#{filename}", "w")
+              file.write("#{surname}\n#{name}\n#{phone}\n#{notes}")
+              file.close()
+              warn "Turno asignado correctamente"
+            rescue Errno::ENOENT => exception
+              warn "ERROR: No se encuentra un Profesional con ese nombre"
+            rescue => exception
+              warn "ERROR: Ha surgido un error desconocido"
+            end          
+          end
         end
       end
 
@@ -57,13 +77,14 @@ module Polycon
 
         def call(date:, professional:)
           warn "TODO: Implementar detalles de un turno con fecha '#{date}' y profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          filename = get_filename_date(date)
-          directory_name = get_professional_format(professional)
+          professional = Professional.new(professional)
+          directory_name = professional.get_professional_format
 
+          filename = Appointment.get_filename_date(date)
+               
           if File.exists?("./.polycon/#{directory_name}/#{filename}")
             file = File.open("./.polycon/#{directory_name}/#{filename}")
             warn file.read
-
           else
             warn "ERROR: No hay un Appointment para la fecha especificada o el Profesional no existe"
           end
@@ -83,9 +104,11 @@ module Polycon
         ]
 
         def call(date:, professional:)
-          warn "TODO: Implementar borrado de un turno con fecha '#{date}' y profesional '#{professional}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          filename = get_filename_date(date)
-          directory_name = get_professional_format(professional)
+          professional = Professional.new(professional)
+          directory_name = professional.get_professional_format
+          
+          filename = Appointment.get_filename_date(date)
+
           if File.exists?("./.polycon/#{directory_name}/#{filename}")
             begin
               File.delete("./.polycon/#{directory_name}/#{filename}")
@@ -111,7 +134,9 @@ module Polycon
         ]
 
         def call(professional:)
-          directory_name = get_professional_format(professional)
+          professional = Professional.new(professional)
+          directory_name = professional.get_professional_format
+
           if Dir.exists?("./.polycon/#{directory_name}")
             begin
               FileUtils.rm_rf(Dir["./.polycon/#{directory_name}/*"])
@@ -140,10 +165,12 @@ module Polycon
 
         def call(professional:, date: nil)
           if date 
-            date = get_filename_date(date) 
+            date = Appointment.get_filename_date(date) 
           end
           
-          directory_name = get_professional_format(professional)
+          professional = Professional.new(professional)
+          directory_name = professional.get_professional_format
+
           if Dir.exists?("./.polycon/#{directory_name}")
             directorios = Dir.entries("./.polycon/#{directory_name}")
             # Borro el . y ..
@@ -183,11 +210,10 @@ module Polycon
 
         def call(old_date:, new_date:, professional:)
           warn "TODO: Implementar cambio de fecha de turno con fecha '#{old_date}' para que pase a ser '#{new_date}'.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
-          old_date_filename = get_filename_date(old_date)
-          new_date_filename = get_filename_date(new_date)
-          directory_name = get_professional_format(professional)
-          warn directory_name
-          warn old_date_filename
+          old_date_filename = Appointment.get_filename_date(old_date)
+          new_date_filename = Appointment.get_filename_date(new_date)
+          professional = Professional.new(professional)
+          directory_name = professional.get_professional_format
           if File.exists?("./.polycon/#{directory_name}/#{old_date_filename}")
             begin
               File.rename("./.polycon/#{directory_name}/#{old_date_filename}","./.polycon/#{directory_name}/#{new_date_filename}")
@@ -218,7 +244,15 @@ module Polycon
         ]
 
         def call(date:, professional:, **options)
-          warn "TODO: Implementar modificación de un turno de la o el profesional '#{professional}' con fecha '#{date}', para cambiarle la siguiente información: #{options}.\nPodés comenzar a hacerlo en #{__FILE__}:#{__LINE__}."
+          filename = Appointment.get_filename_date(date)
+          warn filename
+          professional = Professional.new(professional)
+          appointment = Appointment.new(date: date, professional: professional, **options)
+          data = File.readlines(".polycon/#{Professional.get_professional_format(professional.name)}/#{filename}")
+          old_appointment_data = {:date => date, :profesional => professional, :surname => data[0], :name => data[1], :phone => :data[2], :notes => :data[3]}
+          old_appointment = Appointment.new(old_appointment_data)
+          
+
         end
       end
     end

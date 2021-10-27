@@ -16,7 +16,8 @@ module Polycon
         def call(name:, **)
           begin
             professional = Professional.new(name)
-            FileUtils.mkdir ".polycon/#{professional.name}" #unless Dir.entries('.polycon/'+directory_name)
+            FileUtils.mkdir ".polycon/#{professional.get_professional_format}" #unless Dir.entries('.polycon/'+directory_name)
+            warn "Se ha creado el profesional correctamente"
             return
           rescue Errno::EEXIST => exception 
             warn 'ERROR: Ya existe un profesional con ese nombre'
@@ -37,18 +38,20 @@ module Polycon
 
         def call(name: nil)
           begin
-            directorios = Dir.entries("./.polycon/#{Professional.get_professional_format(name)}")
+            professional = Professional.new(name)
+            filename = professional.get_professional_format
+            directorios = Dir.entries("./.polycon/#{filename}")
             # Borro el . y ..
             directorios.delete(".")
             directorios.delete("..")
             begin
-              Dir.delete("./.polycon/#{Professional.get_professional_format(name)}")
+              Dir.delete("./.polycon/#{professional.get_professional_format}")
               warn "Profesional Borrado"
             rescue Errno::ENOTEMPTY => exception
               warn "ERROR: No se ha podido borrar el Profesional, tiene turnos asignados"
             end
           rescue => exception
-            warn "ERROR: No se ha encontrado un Profesional con ese nombre: #{Professional.get_professional_format(name)}"
+            warn "ERROR: No se ha encontrado un Profesional con ese nombre: #{professional.name}"
         end
         end
       end
@@ -88,8 +91,11 @@ module Polycon
         ]
 
         def call(old_name:, new_name:, **)
-          old_name = Professional.get_professional_format(old_name)
-          new_name = Professional.get_professional_format(new_name)
+          old_professional =  Professional.new(old_name)
+          new_professional =  Professional.new(new_name)
+
+          old_name = old_professional.get_professional_format
+          new_name = new_professional.get_professional_format
           begin
             FileUtils.mv ".polycon/#{old_name}", ".polycon/#{new_name}"
             warn "Profesional Renombrado"

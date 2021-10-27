@@ -1,13 +1,19 @@
 module Polycon
         class Professional
-          def self.get_professional_format(name)
-            professional_name = name.split(" ")
-            directory_name = professional_name[0]+'-'+professional_name[1]
-            return directory_name
+          def get_professional_format
+            professional_name = self.name.split(" ")
+            if professional_name.length > 1
+              professional_with_format = ""
+              professional_name.each do |n|
+                professional_with_format.concat(n)
+                professional_with_format.concat('-') unless professional_name.index(n)+1 == professional_name.length
+              end
+            end
+            return professional_with_format
           end
       
             def initialize(name)
-              @name = get_professional_format(name)
+              @name = name
             end
 
             def name
