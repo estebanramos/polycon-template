@@ -55,6 +55,24 @@ module Polycon
           @notes
         end
 
+        def name=(name)
+          @name = name
+        end
+
+        def surname=(surname)
+          @surname = surname
+        end
+
+        def notes=(notes)
+          @notes = notes
+        end
+
+        def phone=(phone)
+          @phone = phone
+        end
+
+        
+
 
 
     end

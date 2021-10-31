@@ -245,15 +245,105 @@ module Polycon
 
         def call(date:, professional:, **options)
           filename = Appointment.get_filename_date(date)
-          warn filename
           professional = Professional.new(professional)
           appointment = Appointment.new(date: date, professional: professional, **options)
-          data = File.readlines(".polycon/#{Professional.get_professional_format(professional.name)}/#{filename}")
-          old_appointment_data = {:date => date, :profesional => professional, :surname => data[0], :name => data[1], :phone => :data[2], :notes => :data[3]}
+          data = File.readlines(".polycon/#{professional.get_professional_format}/#{filename}", chomp: true)
+          old_appointment_data = Hash.new
+          old_appointment_data = {:date => date, :professional => professional, :surname => data[0], :name => data[1], :phone => data[2], :notes => data[3]}
           old_appointment = Appointment.new(old_appointment_data)
+          options.each do |key, value|
+            old_appointment.send("#{key}=", value)
+          end
+
+          file = File.open(".polycon/#{professional.get_professional_format}/#{filename}", "w")
+          file.write("#{old_appointment.surname}\n#{old_appointment.name}\n#{old_appointment.phone}\n#{old_appointment.notes}")       
+        end
+      end
+
+      class Export < Dry::CLI::Command
+        require "erb"
+        desc 'Exports Appointment(s) details in rich format'
+
+        argument :date, required: true, desc: 'Full date for the appointment'
+        option :professional, required: false, desc: 'Full name of the professional'
+
+        def call(date:, professional: nil)
+          date = Appointment.get_filename_date(date).split("_")[0]
+          if professional
+            appointments_on_date = []
+            directory_name = Professional.new(professional).get_professional_format
+            directorios = Dir.entries("./.polycon/#{directory_name}")
+            directorios.delete(".")
+            directorios.delete("..")
+            directorios.each do |d|              
+              if date.split("_")[0] == d.split("_")[0]
+                lines = File.foreach("./.polycon/#{directory_name}/#{d}").first(2)
+                pacient_name = "#{lines[1]} #{lines[0]}".delete("\n")
+                appointment_date = d.split("_")[1].gsub("-", ":")
+                element = {:date => appointment_date, :pacient_name => pacient_name}
+                appointments_on_date.push(element)               
+              end             
+            end
+          else
+            appointments_on_date = []
+            master_directory = Dir.entries("./.polycon/")
+            master_directory.delete(".")
+            master_directory.delete("..")
+            master_directory.each do |m|
+              directorios = Dir.entries("./.polycon/#{m}")
+              directorios.delete(".")
+              directorios.delete("..")              
+              directorios.each do |d|
+                if date.split("_")[0] == d.split("_")[0]
+                  lines = File.foreach("./.polycon/#{m}/#{d}").first(2)
+                  pacient_name = "#{lines[1]} #{lines[0]}".delete("\n")
+                  appointment_date = d.split("_")[1].gsub("-", ":")
+                  element = {:date => appointment_date, :pacient_name => pacient_name, :professional_name => m.gsub("-", " ")}
+                  appointments_on_date.push(element)               
+                end                
+              end
+            end
+          end
+          
+          hour_list = ["9:00", "9:15", "9:30", "9:45","10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30", "11:45", "12:00"]
+          for_template = []
+          hour_list.each do |h|
+            appointment_list = []
+            appointments_on_date.each do |a|
+              real_time = Time.parse(h)
+              appointment_hour = Time.parse(a[:date]).hour
+              appointment_minute = Time.parse(a[:date]).min
+              #puts "Hour On List: #{real_time.hour}, Hour On Appointment: #{appointment_hour}"
+              if real_time.hour == appointment_hour && (appointment_minute <= real_time.min+15 && appointment_minute >= real_time.min)
+                appointment_list.push(a)
+              end
+            end
+            hash = {:hour => h, :a_list => appointment_list}
+            for_template.push(hash)
+          end
+
+
+          puts for_template
+
+
+          
+          
+          
           
 
+                                                 
+          template = ERB.new <<-EOF
+Date            Appointment
+<% for_template.each do |val| %>
+<%= val[:hour]%><% val[:a_list].each do |val1| %>             <%= val1[:pacient_name]%>
+    <% end %><% end %>          
+          EOF
+          File.open(".polycon/exports/#{date}-export", 'w') do |f|
+            f.write template.result(binding)
+          end
+
         end
+
       end
     end
   end
