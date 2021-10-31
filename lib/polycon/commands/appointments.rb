@@ -269,7 +269,6 @@ module Polycon
         option :week, required: false, desc: 'Optional filter by week'
 
         def call(date:, professional: nil, week: nil)
-          date = Appointment.get_filename_date(date).split("_")[0]
           
           if week
             weekday_index = Date::DAYNAMES.reverse.index("Monday")
@@ -288,7 +287,8 @@ module Polycon
               if date.split("_")[0] == d.split("_")[0]
                 lines = File.foreach("./.polycon/#{directory_name}/#{d}").first(2)
                 pacient_name = "#{lines[1]} #{lines[0]}".delete("\n")
-                appointment_date = d.split("_")[1].gsub("-", ":")
+                time_parsed = d.split("_")
+                appointment_date = Time.parse(time_parsed[0]+' '+time_parsed[1].gsub("-", ":"))
                 element = {:date => appointment_date, :pacient_name => pacient_name}
                 appointments_on_date.push(element)               
               end             
@@ -306,7 +306,8 @@ module Polycon
                 if date.split("_")[0] == d.split("_")[0]
                   lines = File.foreach("./.polycon/#{m}/#{d}").first(2)
                   pacient_name = "#{lines[1]} #{lines[0]}".delete("\n")
-                  appointment_date = d.split("_")[1].gsub("-", ":")
+                  time_parsed = d.split("_")
+                  appointment_date = Time.parse(time_parsed[0]+' '+time_parsed[1].gsub("-", ":"))
                   element = {:date => appointment_date, :pacient_name => pacient_name, :professional_name => m.gsub("-", " ")}
                   appointments_on_date.push(element)               
                 end                
@@ -320,13 +321,14 @@ module Polycon
             appointment_list = []
             appointments_on_date.each do |a|
               real_time = Time.parse(h)
-              appointment_day = Time.parse(a[:date]).day
-              appointment_hour = Time.parse(a[:date]).hour
-              appointment_minute = Time.parse(a[:date]).min
-              if (start_of_week..start_of_week+7).cover?(Time.parse(a[:date]))
+              appointment_day = a[:date].day
+              appointment_hour = a[:date].hour
+              appointment_minute = a[:date].min
+              appointment_month = a[:date].month
+              if week && (start_of_week..start_of_week+7).cover?(a[:date])
                 appointment_list.push(a)
               else
-                if real_time.hour == appointment_hour && (appointment_minute <= real_time.min+15 && appointment_minute >= real_time.min)
+                if real_time.hour == appointment_hour && (appointment_minute <= real_time.min+15 && appointment_minute >= real_time.min && Time.parse(date).month == appointment_month)
                   appointment_list.push(a)
                 end
               end
@@ -334,13 +336,16 @@ module Polycon
             hash = {:hour => h, :a_list => appointment_list}
             for_template.push(hash)
           end
-                                               
+          puts for_template             
           template = ERB.new <<-EOF
-Date           |Appointment|        Professional
+<% if week %> Appointments for week  <%= start_of_week %>  <% else %> Appointments for date <%= date %> <% end %>
+Date           Appointment        Professional
 <% for_template.each do |val| %>
-<%= val[:hour]%>|<% val[:a_list].each do |val1| %>            <%= val1[:pacient_name]%>        <% if val1[:professional_name]%><%= val1[:professional_name] %><% end %>
-    <% end %><% end %>          
-          EOF
+
+<%= val[:hour]%>        <% if val[:a_list].length > 0 %> <% val[:a_list].each do |val1| %>  <%= val1[:pacient_name]%>(<% if week %><%= val1[:date] %><% end %>) <% if val1[:professional_name]%>      <%= val1[:professional_name] %><% end %><% end %><% else %>   SIN TURNO                                                 
+    <% end %>
+    <% end %>          
+EOF
           File.open(".polycon/exports/#{date}-export", 'w') do |f|
             f.write template.result(binding)
           end

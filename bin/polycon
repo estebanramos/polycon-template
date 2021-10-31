@@ -11,6 +11,7 @@ $LOAD_PATH.unshift(File.absolute_path("#{__dir__}/../lib"))
 
 # Creo el directorio principal si no existe
 FileUtils.mkdir ".polycon" unless Dir.exists?('.polycon')
+FileUtils.mkdir ".polycon/exports" unless Dir.exists?('.polycon/exports')
 
 # Requiere `lib/polycon.rb` como punto de partida para cargar todas las definiciones necesarias
 require 'polycon'
