@@ -266,9 +266,18 @@ module Polycon
 
         argument :date, required: true, desc: 'Full date for the appointment'
         option :professional, required: false, desc: 'Full name of the professional'
+        option :week, required: false, desc: 'Optional filter by week'
 
-        def call(date:, professional: nil)
+        def call(date:, professional: nil, week: nil)
           date = Appointment.get_filename_date(date).split("_")[0]
+          
+          if week
+            weekday_index = Date::DAYNAMES.reverse.index("Monday")
+            days_before = (Time.parse(date).wday + weekday_index) % 7 + 1
+            start_of_week = Time.parse(date).to_date - days_before
+          end
+
+
           if professional
             appointments_on_date = []
             directory_name = Professional.new(professional).get_professional_format
@@ -311,31 +320,25 @@ module Polycon
             appointment_list = []
             appointments_on_date.each do |a|
               real_time = Time.parse(h)
+              appointment_day = Time.parse(a[:date]).day
               appointment_hour = Time.parse(a[:date]).hour
               appointment_minute = Time.parse(a[:date]).min
-              #puts "Hour On List: #{real_time.hour}, Hour On Appointment: #{appointment_hour}"
-              if real_time.hour == appointment_hour && (appointment_minute <= real_time.min+15 && appointment_minute >= real_time.min)
+              if (start_of_week..start_of_week+7).cover?(Time.parse(a[:date]))
                 appointment_list.push(a)
+              else
+                if real_time.hour == appointment_hour && (appointment_minute <= real_time.min+15 && appointment_minute >= real_time.min)
+                  appointment_list.push(a)
+                end
               end
             end
             hash = {:hour => h, :a_list => appointment_list}
             for_template.push(hash)
           end
-
-
-          puts for_template
-
-
-          
-          
-          
-          
-
-                                                 
+                                               
           template = ERB.new <<-EOF
-Date            Appointment
+Date           |Appointment|        Professional
 <% for_template.each do |val| %>
-<%= val[:hour]%><% val[:a_list].each do |val1| %>             <%= val1[:pacient_name]%>
+<%= val[:hour]%>|<% val[:a_list].each do |val1| %>            <%= val1[:pacient_name]%>        <% if val1[:professional_name]%><%= val1[:professional_name] %><% end %>
     <% end %><% end %>          
           EOF
           File.open(".polycon/exports/#{date}-export", 'w') do |f|
