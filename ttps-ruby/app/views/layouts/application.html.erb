@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TtpsRuby</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <div>
+    <%= button_to "index", root_path, method: :get %>
+    <% if !user_signed_in? %>
+    <%= button_to "login", new_user_session_path  %>
+    
+    <% end %>
+    <% if user_signed_in? %>
+    <%= button_to "logout", destroy_user_session_path, method: :delete  %>
+    <% end %>
+    </div>
+    <% if user_signed_in? %>
+    <div>Signed in as: <%= current_user.email %> - <%= current_user.role %>
+    <% end %>
+    </div>
+
+    
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>

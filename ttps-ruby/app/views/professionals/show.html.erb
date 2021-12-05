@@ -1,0 +1,10 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @professional.name %>
+</p>
+<% if can? :manage, @professional %>
+ <%= link_to 'Edit', edit_professional_path(@professional) %> |
+<% end %>
+<%= link_to 'Back', professionals_path %>

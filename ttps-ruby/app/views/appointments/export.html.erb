@@ -1,0 +1,9 @@
+<%= form_with url: "/appointments/download_file", method: :get do |form| %>
+  <%= form.label :date, "Date:" %>
+  <%= form.date_field :date %>
+  <%= form.label :professional %>
+  <%= form.collection_select :professional, Professional.all, :id, :name %>
+  <%= form.label :week, "Week Filter" %>
+  <%= form.check_box :week %>
+  <%= form.submit "Generate File" %>
+<% end %>

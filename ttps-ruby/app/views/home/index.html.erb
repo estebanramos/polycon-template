@@ -1,0 +1,6 @@
+<%= link_to 'Appointments', appointments_path %> <%= link_to 'Professionals', professionals_path %> 
+
+<% if can? :manage, @user %>
+ <%= link_to 'Users', users_path %>
+<% end %>
+
