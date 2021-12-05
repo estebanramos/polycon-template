@@ -24,7 +24,7 @@ class UsersController < ApplicationController
   # POST /users or /users.json
   def create
 
-    @user = User.new({:email => user_params["email"], :password => user_params["password"]})
+    @user = User.new({:email => user_params["email"], :password => user_params["password"], :role => user_params["role"]})
     #@user = User.new sign_up_params
 
     respond_to do |format|
@@ -41,7 +41,7 @@ class UsersController < ApplicationController
   # PATCH/PUT /users/1 or /users/1.json
   def update
     respond_to do |format|
-      if @user.update({:email => user_params["email"], :password => user_params["password"]})
+      if @user.update({:email => user_params["email"], :password => user_params["password"], :role => user_params["role"]})
         format.html { redirect_to @user, notice: "User was successfully updated." }
         format.json { render :show, status: :ok, location: @user }
       else
