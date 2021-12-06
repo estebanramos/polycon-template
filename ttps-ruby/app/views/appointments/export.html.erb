@@ -5,5 +5,7 @@
   <%= form.collection_select :professional, Professional.all, :id, :name %>
   <%= form.label :week, "Week Filter" %>
   <%= form.check_box :week %>
+  <div>
   <%= form.submit "Generate File" %>
+  </div>
 <% end %>
